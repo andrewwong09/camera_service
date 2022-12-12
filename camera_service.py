@@ -1,15 +1,12 @@
-import cv2
-import time
 import os
+import time
 from datetime import datetime
 from multiprocessing import Process
 import logging
 import json
 
 import numpy as np
-
-import motor_run as mr 
-import hallo_world as hw
+import cv2
 
 
 cache_dir = '/home/andrew/cache'
@@ -17,7 +14,7 @@ cam = cv2.VideoCapture(0)
 initial_state = None
 
 
-def in_excluded_region(contour, configs_path='/home/andrew/scripts/configs.json'):
+def in_excluded_region(contour, configs_path=os.path.join(os.get_cwd(), 'configs.json')):
     M = cv2.moments(contour)
     
     exclusion_contours = []
@@ -96,9 +93,16 @@ def start():
         if count == 10:
             initial_state = None
             count = 0
-        rot_image = cv2.rotate(image, cv2.ROTATE_90_CLOCKWISE)
+        rot_image = cv2.rotate(image, cv2.ROTATE_180)
         detect_motion(rot_image)
-
         time.sleep(0.3)
         count = count + 1
     cam.release()
+
+
+if __name__ == '__main__':
+    logging.info('Hello from cam.py main.') 
+    p = Process(target=start)
+    p.start()
+    logging.info('cam process started.')
+    p.join() # This will likely never be reached
