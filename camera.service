@@ -1,0 +1,9 @@
+[Unit]
+Description=Camera Service
+
+[Service]
+ExecStart=/home/andrew/camera_service/camera_service.sh
+Restart=always
+
+[Install]
+WantedBy=default.target
