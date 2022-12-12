@@ -9,12 +9,16 @@ import numpy as np
 import cv2
 
 
+import logger as logger
+
+
+logger.setup_logging('camera.log')
 cache_dir = '/home/andrew/cache'
 cam = cv2.VideoCapture(0)
 initial_state = None
 
 
-def in_excluded_region(contour, configs_path=os.path.join(os.get_cwd(), 'configs.json')):
+def in_excluded_region(contour, configs_path=os.path.join(os.getcwd(), 'configs.json')):
     M = cv2.moments(contour)
     
     exclusion_contours = []
@@ -93,16 +97,14 @@ def start():
         if count == 10:
             initial_state = None
             count = 0
-        rot_image = cv2.rotate(image, cv2.ROTATE_180)
-        detect_motion(rot_image)
+        detect_motion(image)
         time.sleep(0.3)
         count = count + 1
     cam.release()
 
 
 if __name__ == '__main__':
-    logging.info('Hello from cam.py main.') 
-    p = Process(target=start)
-    p.start()
-    logging.info('cam process started.')
-    p.join() # This will likely never be reached
+    logger = logging.getLogger('camera_service')
+    logger.info('Hello from cam.py main... starting')
+    start()
+    logger.info('cam process ended.')

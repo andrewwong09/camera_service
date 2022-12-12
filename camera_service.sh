@@ -4,7 +4,7 @@ echo -e "\n$(date) Cam Service Shell----------------------------" >> /home/andre
 
 sleep 1
 
-/home/andrew/.virtualenvs/chicken_door/bin/python /home/andrew/canera_service/camera_service.py >> /home/andrew/logs/camera.service.log 2>&1
+/home/andrew/.virtualenvs/chicken_door/bin/python /home/andrew/camera_service/camera_service.py >> /home/andrew/logs/camera.service.log 2>&1
 
 
 
