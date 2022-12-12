@@ -82,11 +82,6 @@ def detect_motion(frame):
     if num_moving_obj > 0:
         logging.info(f"Found {num_moving_obj} moving objects.")
         cv2.imwrite(f"{os.path.join(cache_dir, date_time)}.jpg", frame.astype('uint8'))
-        if hw.in_between(now.time()):
-            p1 = Process(target=mr.run_motor)
-            p1.start()
-            p2 = Process(target=hw.play_sound)
-            p2.start()
 
 
 def start():
