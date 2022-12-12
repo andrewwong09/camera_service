@@ -18,7 +18,7 @@ cam = cv2.VideoCapture(0)
 initial_state = None
 
 
-def in_excluded_region(contour, configs_path=os.path.join(os.getcwd(), 'configs.json')):
+def in_excluded_region(contour, configs_path=os.path.join(os.getcwd(), 'config.json')):
     M = cv2.moments(contour)
     
     exclusion_contours = []
