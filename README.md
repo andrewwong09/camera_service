@@ -19,7 +19,7 @@ sudo crontab -e
 
 ```
 1 0 * * * $HOME/camera_service/rm_cache.sh >> $HOME/crontab.log 2>&1
-5 0 * * * /sbin/shutdown -r now >> $HOME/crontab.log 2>&1
+1 3 * * * /sbin/shutdown -r now >> $HOME/crontab.log 2>&1
 ```
 
 
