@@ -14,9 +14,31 @@ import logger as logger
 
 logger.setup_logging('camera.log')
 cache_dir = '/home/andrew/cache'
-cam = cv2.VideoCapture(0)
+cam = cv2.VideoCapture(0, cv2.CAP_ANY)
+cam.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
+cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
+cam.set(cv2.CAP_PROP_EXPOSURE, 250)
+cam.set(cv2.CAP_PROP_FPS, 3)
 initial_state = None
 
+
+def output_camera_properties(capture):
+    # showing values of the properties
+    print("CV_CAP_PROP_FRAME_WIDTH: '{}'".format(capture.get(cv2.CAP_PROP_FRAME_WIDTH)))
+    print("CV_CAP_PROP_FRAME_HEIGHT : '{}'".format(capture.get(cv2.CAP_PROP_FRAME_HEIGHT)))
+    print("CAP_PROP_FPS : '{}'".format(capture.get(cv2.CAP_PROP_FPS)))
+    print("CAP_PROP_POS_MSEC : '{}'".format(capture.get(cv2.CAP_PROP_POS_MSEC)))
+    print("CAP_PROP_FRAME_COUNT  : '{}'".format(capture.get(cv2.CAP_PROP_FRAME_COUNT)))
+    print("CAP_PROP_BRIGHTNESS : '{}'".format(capture.get(cv2.CAP_PROP_BRIGHTNESS)))
+    print("CAP_PROP_CONTRAST : '{}'".format(capture.get(cv2.CAP_PROP_CONTRAST)))
+    print("CAP_PROP_SATURATION : '{}'".format(capture.get(cv2.CAP_PROP_SATURATION)))
+    print("CAP_PROP_HUE : '{}'".format(capture.get(cv2.CAP_PROP_HUE)))
+    print("CAP_PROP_GAIN  : '{}'".format(capture.get(cv2.CAP_PROP_GAIN)))
+    print("CAP_PROP_EXPOSURE  : '{}'".format(capture.get(cv2.CAP_PROP_EXPOSURE)))
+    print("CAP_PROP_AUTO_EXPOSURE  : '{}'".format(capture.get(cv2.CAP_PROP_AUTO_EXPOSURE)))
+    print("CAP_PROP_CONVERT_RGB : '{}'".format(capture.get(cv2.CAP_PROP_CONVERT_RGB)))
+
+output_camera_properties(cam)
 
 def in_excluded_region(contour, configs_path=os.path.join(os.getcwd(), 'config.json')):
     M = cv2.moments(contour)
@@ -52,7 +74,8 @@ def detect_motion(frame):
         return
 
     now = datetime.now() # current date and time
-    date_time = now.strftime("%m%d%Y_%H%M%S.%f")[:-3]
+    date_time = now.strftime("%Y%m%d_%H%M%S.%f")[:-3]
+    dir_str = now.strftime("%Y%m%d")
 
     differ_frame = cv2.absdiff(initial_state, gray_frame)
     
@@ -66,7 +89,7 @@ def detect_motion(frame):
                                cv2.CHAIN_APPROX_SIMPLE)
     num_moving_obj = 0
     for cur in cont:
-        if cv2.contourArea(cur) < 10000:
+        if cv2.contourArea(cur) < 1000:
             continue
 
         color = (255, 0, 0)
@@ -81,7 +104,10 @@ def detect_motion(frame):
 
     if num_moving_obj > 0:
         logging.info(f"Found {num_moving_obj} moving objects.")
-        cv2.imwrite(f"{os.path.join(cache_dir, date_time)}.jpg", frame.astype('uint8'))
+        directory = os.path.join(cache_dir, dir_str)
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+        cv2.imwrite(f"{os.path.join(directory, date_time)}.jpg", frame.astype('uint8'))
 
 
 def start():
@@ -92,6 +118,7 @@ def start():
         if count == 10:
             initial_state = None
             count = 0
+        image = cv2.rotate(image, cv2.ROTATE_180)
         detect_motion(image)
         time.sleep(0.3)
         count = count + 1
@@ -100,6 +127,12 @@ def start():
 
 if __name__ == '__main__':
     logger = logging.getLogger('camera_service')
-    logger.info('Hello from cam.py main... starting')
+    logger.info('Hello from cam.py main. Saving First Frame.')
+    now = datetime.now() # current date and time
+    date_time = now.strftime("%m%d%Y_%H%M%S.%f")[:-3]
+    return_val, image = cam.read()
+    image = cv2.rotate(image, cv2.ROTATE_180)
+    cv2.imwrite(f"{os.path.join(cache_dir, date_time)}_FF.jpg", image.astype('uint8'))
+    logger.info('Starting while loop')
     start()
     logger.info('cam process ended.')
