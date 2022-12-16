@@ -104,8 +104,8 @@ def detect_motion(frame):
 
     if num_moving_obj > 0:
         logging.info(f"Found {num_moving_obj} moving objects.")
-        frame = cv2.putText(frame, f'{date_time}', (50, 100), cv2.FONT_HERSHEY_SIMPLEX,
-                            1, (255, 0, 0), 2, cv2.LINE_AA)
+        frame = cv2.putText(frame, f'{date_time}', (50, 75), cv2.FONT_HERSHEY_SIMPLEX,
+                            2, (0, 0, 255), 2, cv2.LINE_AA)
         directory = os.path.join(cache_dir, dir_str)
         if not os.path.exists(directory):
             os.makedirs(directory)

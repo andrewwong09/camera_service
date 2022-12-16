@@ -12,14 +12,21 @@ sudo loginctl enable-linger andrew
 
 
 **Rebooting and clearing cache of images**
-Add the following to crontab
+Add the following to crontabs, one sudo (i.e. root) and one user
 ```
-sudo crontab -e
+crontab -e
+```
+User crontab
+```
+1 0 * * * $HOME/camera_service/rm_cache.sh >> $HOME/crontab.log 2>&1
 ```
 
 ```
-1 0 * * * $HOME/camera_service/rm_cache.sh >> $HOME/crontab.log 2>&1
-1 3 * * * /sbin/shutdown -r now >> $HOME/crontab.log 2>&1
+sudo crontab -e
+```
+Root crontab
+```
+1 5 * * * /sbin/shutdown -r now >> $HOME/crontab.log 2>&1
 ```
 
 
