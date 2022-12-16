@@ -18,6 +18,7 @@ crontab -e
 ```
 User crontab
 ```
+1 19 * * * $HOME/camera_service/evening_review.sh >> $HOME/camera_service/camera.log 2>&1
 1 0 * * * $HOME/camera_service/rm_cache.sh >> $HOME/crontab.log 2>&1
 ```
 
