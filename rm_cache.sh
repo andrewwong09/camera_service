@@ -7,7 +7,7 @@ echo $(date): Compressing and removing $dir_to_rm  >> $HOME/camera_service/camer
 
 cd $dir_to_rm
 ffmpeg -y -framerate 10 -pattern_type glob -i '*.jpg' -c:v libx264 -pix_fmt yuv420p $date_str.mp4
-mv ./$date_str.mp4 $HOME/cache/
+mv ./$date_str.mp4 /media/andrew/i_lost_my_heart_/
 
 rm -r $dir_to_rm
 echo $(date): Done compressing and removing $dir_to_rm >> $HOME/camera_service/camera.log 2>&1

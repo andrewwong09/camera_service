@@ -8,3 +8,4 @@ echo $(date): Compressing $dir_to_compress  >> $HOME/camera_service/camera.log 2
 cd $dir_to_compress
 ffmpeg -y -framerate 10 -pattern_type glob -i '*.jpg' -c:v libx264 -pix_fmt yuv420p $date_str.mp4
 mv ./$date_str.mp4 $HOME/cache/
+echo $(date): Done compressing $dir_to_compress  >> $HOME/camera_service/camera.log 2>&1

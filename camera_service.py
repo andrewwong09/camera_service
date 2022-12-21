@@ -17,8 +17,6 @@ cache_dir = '/home/andrew/cache'
 cam = cv2.VideoCapture(0, cv2.CAP_ANY)
 cam.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
 cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
-cam.set(cv2.CAP_PROP_EXPOSURE, 250)
-cam.set(cv2.CAP_PROP_FPS, 3)
 initial_state = None
 
 
@@ -89,7 +87,7 @@ def detect_motion(frame):
                                cv2.CHAIN_APPROX_SIMPLE)
     num_moving_obj = 0
     for cur in cont:
-        if cv2.contourArea(cur) < 1000:
+        if cv2.contourArea(cur) < 2500:
             continue
 
         color = (255, 0, 0)
@@ -122,7 +120,7 @@ def start():
             count = 0
         image = cv2.rotate(image, cv2.ROTATE_180)
         detect_motion(image)
-        time.sleep(0.3)
+        time.sleep(0.5)
         count = count + 1
     cam.release()
 
