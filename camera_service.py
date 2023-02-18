@@ -1,4 +1,5 @@
 import os
+import sys
 import time
 from datetime import datetime
 from multiprocessing import Process
@@ -14,9 +15,6 @@ import logger as logger
 
 logger.setup_logging('camera.log')
 cache_dir = '/home/andrew/cache'
-cam = cv2.VideoCapture(0, cv2.CAP_ANY)
-cam.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
-cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
 initial_state = None
 
 
@@ -36,7 +34,6 @@ def output_camera_properties(capture):
     print("CAP_PROP_AUTO_EXPOSURE  : '{}'".format(capture.get(cv2.CAP_PROP_AUTO_EXPOSURE)))
     print("CAP_PROP_CONVERT_RGB : '{}'".format(capture.get(cv2.CAP_PROP_CONVERT_RGB)))
 
-output_camera_properties(cam)
 
 def in_excluded_region(contour, configs_path=os.path.join(os.getcwd(), 'config.json')):
     M = cv2.moments(contour)
@@ -62,7 +59,7 @@ def in_excluded_region(contour, configs_path=os.path.join(os.getcwd(), 'config.j
     return in_excluded_contour
 
 
-def detect_motion(frame):
+def detect_motion(frame, dev_num=0):
     global initial_state
     gray_image = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     gray_frame = cv2.GaussianBlur(gray_image, (21, 21), 0)
@@ -101,16 +98,17 @@ def detect_motion(frame):
         cv2.rectangle(frame, (cur_x, cur_y), (cur_x + cur_w, cur_y + cur_h), color, 3)
 
     if num_moving_obj > 0:
-        logging.info(f"Found {num_moving_obj} moving objects.")
+        logging.info(f"Dev {dev_num}: Found {num_moving_obj} moving objects.")
         frame = cv2.putText(frame, f'{date_time}', (50, 75), cv2.FONT_HERSHEY_SIMPLEX,
                             2, (0, 0, 255), 2, cv2.LINE_AA)
         directory = os.path.join(cache_dir, dir_str)
         if not os.path.exists(directory):
             os.makedirs(directory)
-        cv2.imwrite(f"{os.path.join(directory, date_time)}.jpg", frame.astype('uint8'))
+        file_name = f'dev{dev_num}_{date_time}'
+        cv2.imwrite(f"{os.path.join(directory, file_name)}.jpg", frame.astype('uint8'))
 
 
-def start():
+def start(cam, dev_num):
     global initial_state
     count = 0
     while(1):
@@ -119,7 +117,7 @@ def start():
             initial_state = None
             count = 0
         image = cv2.rotate(image, cv2.ROTATE_180)
-        detect_motion(image)
+        detect_motion(image, dev_num)
         time.sleep(0.5)
         count = count + 1
     cam.release()
@@ -127,12 +125,48 @@ def start():
 
 if __name__ == '__main__':
     logger = logging.getLogger('camera_service')
-    logger.info('Hello from cam.py main. Saving First Frame.')
-    now = datetime.now() # current date and time
-    date_time = now.strftime("%m%d%Y_%H%M%S.%f")[:-3]
-    return_val, image = cam.read()
-    image = cv2.rotate(image, cv2.ROTATE_180)
-    cv2.imwrite(f"{os.path.join(cache_dir, date_time)}_FF.jpg", image.astype('uint8'))
-    logger.info('Starting while loop')
-    start()
-    logger.info('cam process ended.')
+    logger.info('Hello from cam.py main.')
+
+    devices = {}
+
+    for dev_num in range(10):
+        logger.info(f"Dev Num: {dev_num}")
+        cam = cv2.VideoCapture(dev_num, cv2.CAP_ANY)
+        cam.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
+        cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
+        cam.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M','J','P','G'))
+        success = False
+        for _ in range(5):
+            return_val, image = cam.read()
+            if return_val and image is not None:
+                logger.info(f"Found Dev Num: {dev_num}")
+                devices[dev_num] = cam
+                success = True
+                break
+        if not success:
+            logger.debug(f"Not this device: {dev_num}")
+            cam.release()
+
+    if len(devices) == 0:
+        sys.exit("No devices found: exiting main.")
+
+    cam_processes = []
+    for dev_num, cam in devices.items():
+        logger.info(f"Dev Num: {dev_num} Props")
+        output_camera_properties(cam)
+        now = datetime.now() # current date and time
+        date_time = now.strftime("%Y%m%d_%H%M%S.%f")[:-3]
+        return_val, image = cam.read()
+        image = cv2.rotate(image, cv2.ROTATE_180)
+        first_frame_fp = f"{os.path.join(cache_dir, date_time)}_FF_{dev_num}.jpg"
+        logger.info(f'Writing: {first_frame_fp}')
+        cv2.imwrite(first_frame_fp, image.astype('uint8'))
+        logger.info(f'Starting while loop for dev {dev_num}')
+        proc = Process(target=start, args=(cam, dev_num, ))
+        cam_processes.append(proc)
+        proc.start()
+    
+    # complete the processes
+    for proc in cam_processes:
+        proc.join()
+    logger.info('cam processes ended.')
